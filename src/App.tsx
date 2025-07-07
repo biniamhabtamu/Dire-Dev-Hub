@@ -1,42 +1,46 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import Navigation from "@/components/Navigation";
-import Index from "./pages/Index";
-import Chat from "./pages/Chat";
-import DevTools from "./pages/DevTools";
-import Pages from "./pages/Pages";
-import Discussion from "./pages/Discussion";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 
-const queryClient = new QueryClient();
+import Navigation from '@/components/Navigation';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Chat from './pages/Chat';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
+// ... other imports
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <div className="min-h-screen bg-background">
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/dev-tools" element={<DevTools />} />
-              <Route path="/pages" element={<Pages />} />
-              <Route path="/discussion" element={<Discussion />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [user, loading] = useAuthState(auth);
+
+  if (loading) {
+    // Optional: show loading while auth state initializing
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <BrowserRouter>
+      <Navigation user={user} />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route
+          path="/login"
+          element={!user ? <Login /> : <Navigate to="/chat" replace />}
+        />
+        <Route
+          path="/signup"
+          element={!user ? <Signup /> : <Navigate to="/chat" replace />}
+        />
+        <Route
+          path="/chat"
+          element={user ? <Chat /> : <Navigate to="/login" replace />}
+        />
+        {/* Add other routes here */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
 
 export default App;

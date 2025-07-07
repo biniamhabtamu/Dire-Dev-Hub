@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { 
-  BookOpen, 
-  MessageCircle, 
-  Code, 
-  FileText, 
-  Users, 
-  Moon, 
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import {
+  BookOpen,
+  MessageCircle,
+  Code,
+  FileText,
+  Users,
+  Moon,
   Sun,
   Menu,
-  X
+  X,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-const Navigation = () => {
+const Navigation = ({ user }) => {
   const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -27,7 +29,15 @@ const Navigation = () => {
     { name: 'Discussion', path: '/discussion', icon: Users },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path) => location.pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -47,7 +57,7 @@ const Navigation = () => {
           {navItems.map((item) => (
             <Button
               key={item.name}
-              variant={isActive(item.path) ? "default" : "ghost"}
+              variant={isActive(item.path) ? 'default' : 'ghost'}
               size="sm"
               asChild
             >
@@ -67,17 +77,21 @@ const Navigation = () => {
             size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           >
-            {theme === 'dark' ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
 
-          {/* Login Button */}
-          <Button variant="outline" size="sm">
-            Login
-          </Button>
+          {/* Conditional Login / Logout */}
+          {user ? (
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              Logout
+            </Button>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                Login
+              </Button>
+            </Link>
+          )}
 
           {/* Mobile Menu Toggle */}
           <Button
@@ -86,11 +100,7 @@ const Navigation = () => {
             className="md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <Menu className="h-4 w-4" />
-            )}
+            {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -102,7 +112,7 @@ const Navigation = () => {
             {navItems.map((item) => (
               <Button
                 key={item.name}
-                variant={isActive(item.path) ? "default" : "ghost"}
+                variant={isActive(item.path) ? 'default' : 'ghost'}
                 className="w-full justify-start"
                 asChild
                 onClick={() => setIsMobileMenuOpen(false)}
